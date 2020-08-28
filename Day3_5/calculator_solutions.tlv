@@ -8,12 +8,13 @@
    m4_makerchip_module   // (Expanded in Nav-TLV pane.)
 
 \TLV
-
-   |fib
+   |comp
       @1
-         $reset = *reset;
-         $num[31:0] = $reset ? 1 : (>>1$num+>>2$num);
- 
+         $err1 = $bad_input | $illegal_op;
+      @3
+         $err2 = $err1 | $over_flow;
+      @6
+         $err3 = $err2 | $div_by_zero;
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
       // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
