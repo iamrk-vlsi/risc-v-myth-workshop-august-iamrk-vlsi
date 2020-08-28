@@ -9,8 +9,11 @@
 
 \TLV
    |calc
-      @1
+      @0
          $reset = *reset;
+      @1
+         $cnt = $reset ? 0 : (>>1$cnt + 1);
+         $valid = $cnt;
          $val1[31:0] = >>2$out;       //Modification for memory
          $val2[31:0] = $rand2[3:0];
          //ADD
@@ -24,8 +27,7 @@
          //OUT
       @2
          //Free Running Counter
-         $cnt = $reset ? 0 : (>>1$cnt + 1);
-         $valid = $cnt;
+         
          $out[31:0] =  ($reset || !$valid)  ? 32'b0 : ($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ));
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
@@ -36,7 +38,7 @@
       //  o $rand2[3:0]
       //  o $op[x:0]
    
-   //m4+cal_viz(@3) // Arg: Pipeline stage represented by viz, should be atleast equal to last stage of CALCULATOR logic.
+   m4+cal_viz(@3) // Arg: Pipeline stage represented by viz, should be atleast equal to last stage of CALCULATOR logic.
 
    
    // Assert these to end simulation (before Makerchip cycle limit).
