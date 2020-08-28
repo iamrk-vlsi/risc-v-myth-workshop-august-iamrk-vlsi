@@ -14,21 +14,24 @@
       @1
          $cnt = $reset ? 0 : (>>1$cnt + 1);
          $valid = $cnt;
-         $val1[31:0] = >>2$out;       //Modification for memory
-         $val2[31:0] = $rand2[3:0];
-         //ADD
-         $sum[31:0] = $val1 + $val2;
-         //SUB
-         $diff[31:0] = $val1 - $val2;
-         //MUL
-         $prod[31:0] = $val1 * $val2;
-         //DIV
-         $quot[31:0] = $val1 / $val2;
-         //OUT
-      @2
-         //Free Running Counter
-         
-         $out[31:0] =  ($reset || !$valid)  ? 32'b0 : ($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ));
+         $valid_or_reset = $valid || $reset;
+      ?$valid_or_reset
+         @1
+            $val1[31:0] = >>2$out;       //Modification for memory
+            $val2[31:0] = $rand2[3:0];
+            //ADD
+            $sum[31:0] = $val1 + $val2;
+            //SUB
+            $diff[31:0] = $val1 - $val2;
+            //MUL
+            $prod[31:0] = $val1 * $val2;
+            //DIV
+            $quot[31:0] = $val1 / $val2;
+            //OUT
+         @2
+            //Free Running Counter
+            $out[31:0] =  ($reset || !$valid)  ? 32'b0 : ($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ));
+      
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
       // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
