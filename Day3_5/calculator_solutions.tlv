@@ -8,13 +8,26 @@
    m4_makerchip_module   // (Expanded in Nav-TLV pane.)
 
 \TLV
-   |comp
+   |calc
       @1
-         $err1 = $bad_input | $illegal_op;
-      @3
-         $err2 = $err1 | $over_flow;
-      @6
-         $err3 = $err2 | $div_by_zero;
+         $reset = *reset;
+         
+         $val1[31:0] = >>1$out;       //Modification for memory
+         $val2[31:0] = $rand2[3:0];
+         //ADD
+         $sum[31:0] = $val1 + $val2;
+         //SUB
+         $diff[31:0] = $val1 - $val2;
+         //MUL
+         $prod[31:0] = $val1 * $val2;
+         //DIV
+         $quot[31:0] = $val1 / $val2;
+         //OUT
+         $out[31:0] =  $reset ? 32'b0 : ($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ));
+         
+         //Free Running Counter
+         $cnt[4:0] = $reset ? 0 : (>>1$cnt + 1);
+ 
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
       // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
