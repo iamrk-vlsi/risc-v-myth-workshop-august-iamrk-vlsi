@@ -11,8 +11,7 @@
    |calc
       @1
          $reset = *reset;
-         
-         $val1[31:0] = >>1$out;       //Modification for memory
+         $val1[31:0] = >>2$out;       //Modification for memory
          $val2[31:0] = $rand2[3:0];
          //ADD
          $sum[31:0] = $val1 + $val2;
@@ -23,11 +22,11 @@
          //DIV
          $quot[31:0] = $val1 / $val2;
          //OUT
-         $out[31:0] =  $reset ? 32'b0 : ($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ));
-         
+      @2
          //Free Running Counter
-         $cnt[4:0] = $reset ? 0 : (>>1$cnt + 1);
- 
+         $cnt = $reset ? 0 : (>>1$cnt + 1);
+         $valid = $cnt;
+         $out[31:0] =  ($reset || !$valid)  ? 32'b0 : ($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ));
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
       // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
