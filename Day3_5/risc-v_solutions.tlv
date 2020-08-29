@@ -45,7 +45,7 @@
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
          $imem_rd_en = !$reset;
          $instr[31:0] = $imem_rd_data[31:0];
-         //Asserting the signal types
+         //Intruction Type Decode Logic for Immediate Instruction types
          $is_i_instr = $instr[6:2] ==? 5'b0000x || $instr[6:2] ==? 5'b001x0 || $instr[6:2] ==? 5'b11001 || $instr[6:2] ==? 5'b11100; 
          $is_u_instr = $instr[6:2] ==? 5'b0x101;
          $is_s_instr = $instr[6:2] ==? 5'b0100x;
@@ -60,12 +60,29 @@
                       $is_j_instr ? { {12{$instr[31]}}, $instr[19:12], $instr[20], $instr[30:21], 1'b0 } :
                       32'b0;
          //Extraction of other instruction field
-         $funct7[6:0] = $instr[31:25];
-         $funct3[2:0] = $instr[14:12];
-         $rs1[4:0] = $instr[19:15];
-         $rs2[4:0] = $instr[24:20];
-         $rd[4:0] = $instr[11:7];
+         $rs2_valid = $is_r_instr || $is_s_instr || $is_b_instr;
+         ?$rs2_valid
+            $rs2[4:0] = $instr[24:20];
+         
+         $rs1_valid = $is_i_instr || $is_r_instr || $is_s_instr || $is_b_instr;
+         ?$rs1_valid
+            $rs1[4:0] = $instr[19:15];
+         
+         $funct3_valid = $is_i_instr || $is_r_instr || $is_s_instr || $is_b_instr;
+         ?$funct3_valid
+            $funct3[2:0] = $instr[14:12];
+         
+         $funct7_valid = $is_r_instr;
+         ?$funct7_valid
+            $funct7[6:0] = $instr[31:25];
+         
+         $rd_valid = $is_i_instr || $is_r_instr || $is_u_instr || $is_j_instr;
+         ?$rd_valid
+            $rd[4:0] = $instr[11:7];
          $opcode[6:0] = $instr[6:0];
+ //        $opcode_valid = $is_i_instr || $is_r_instr || $is_s_instr || $is_u_instr || $is_j_instr;
+ //        ?$opcode_valid
+ //           $opcode[6:0] = $instr[6:0];
 
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
