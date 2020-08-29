@@ -36,12 +36,12 @@
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
-
    |cpu
       @0
          $reset = *reset;
          $pc[31:0] = >>1$reset ? 32'd0 : (>>1$pc + 32'd4);
       @1
+         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
          $imem_rd_en = !$reset;
          $instr[31:0] = $imem_rd_data[31:0];
@@ -80,6 +80,19 @@
          ?$rd_valid
             $rd[4:0] = $instr[11:7];
          $opcode[6:0] = $instr[6:0];
+         
+         //Instruction Decode
+         $dec_bits[10:0] = { $funct7[5] , $funct3 , $opcode };
+         $is_beq = $dec_bits ==? 11'bx_000_1100011;
+         $is_bne = $dec_bits ==? 11'bx_001_1100011;
+         $is_blt = $dec_bits ==? 11'bx_100_1100011;
+         $is_bge = $dec_bits ==? 11'bx_101_1100011;
+         
+         $is_bltu = $dec_bits ==? 11'bx_110_1100011;
+         $is_bgeu = $dec_bits ==? 11'bx_111_1100011;
+         $is_addi = $dec_bits ==? 11'bx_000_0110011;
+         
+         $is_add = $dec_bits ==? 11'b0_000_1100011;
  //        $opcode_valid = $is_i_instr || $is_r_instr || $is_s_instr || $is_u_instr || $is_j_instr;
  //        ?$opcode_valid
  //           $opcode[6:0] = $instr[6:0];
