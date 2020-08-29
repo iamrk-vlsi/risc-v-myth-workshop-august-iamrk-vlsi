@@ -41,7 +41,10 @@
       @0
          $reset = *reset;
          $pc[31:0] = >>1$reset ? 32'd0 : (>>1$pc + 32'd4);
-
+      @1
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
+         $imem_rd_en = !$reset;
+         $instr[31:0] = $imem_rd_data[31:0];
 
       // YOUR CODE HERE
       // ...
