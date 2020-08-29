@@ -41,7 +41,7 @@
          $reset = *reset;
          $pc[31:0] = >>1$reset ? 32'd0 : (>>1$pc + 32'd4);
       @1
-         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
+         //`BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
          $imem_rd_en = !$reset;
          $instr[31:0] = $imem_rd_data[31:0];
@@ -76,19 +76,6 @@
          ?$funct7_valid
             $funct7[6:0] = $instr[31:25];
          
-         $rd_valid = $is_i_instr || $is_r_instr || $is_u_instr || $is_j_instr;
-         ?$rd_valid
-            $rd[4:0] = $instr[11:7];
-         $opcode[6:0] = $instr[6:0];
-         
-         $rf_rd_en1 = $rs1_valid;         
-         ?$rf_rd_en1
-            $rf_rd_index1[4:0] = $rs1;
-            
-         $rf_rd_en2 = $rs2_valid;
-         ?$rf_rd_en2
-            $rf_rd_index2[4:0] = $rs2;
-         
          //Instruction Decode
          $dec_bits[10:0] = { $funct7[5] , $funct3 , $opcode };
          $is_beq = $dec_bits ==? 11'bx_000_1100011;
@@ -101,9 +88,26 @@
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
          
          $is_add = $dec_bits ==? 11'b0_000_0110011;
- //        $opcode_valid = $is_i_instr || $is_r_instr || $is_s_instr || $is_u_instr || $is_j_instr;
- //        ?$opcode_valid
- //           $opcode[6:0] = $instr[6:0];
+         
+         //Assigning source register values to Regiter file Read (Rf_rd)
+         $rd_valid = $is_i_instr || $is_r_instr || $is_u_instr || $is_j_instr;
+         ?$rd_valid
+            $rd[4:0] = $instr[11:7];
+         $opcode[6:0] = $instr[6:0];
+         
+         $rf_rd_en1 = $rs1_valid;
+         ?$rf_rd_en1
+            $rf_rd_index1[4:0] = $rs1;
+            
+         $rf_rd_en2 = $rs2_valid;
+         ?$rf_rd_en2
+            $rf_rd_index2[4:0] = $rs2;
+         //Assigning inputs of ALU with Rf_rd Outputs <<Note:rd means read>>
+         $src1_value[31:0] = $rf_rd_data1;
+         $src2_value[31:0] = $rf_rd_data2;
+         
+         //Assign the ALU $result for ADD and ADDI
+         $result[31:0] = $is_addi ? $src1_value + $imm : $is_add ? $src1_value + $src2_value : 32'bx;
 
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
