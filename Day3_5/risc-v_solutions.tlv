@@ -108,7 +108,12 @@
          
          //Assign the ALU $result for ADD and ADDI
          $result[31:0] = $is_addi ? $src1_value + $imm : $is_add ? $src1_value + $src2_value : 32'bx;
-
+         
+         //Register File Write (Rf_wr)
+         $rf_wr_data[31:0] = $result;
+         $rf_wr_en = ($rd == 5'b0) ? 1'b0 : $rd_valid ;
+         ?$rf_wr_en
+            $rf_wr_index[4:0] = $rd ;
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
       //       other than those specifically expected in the labs. You'll get strange errors for these.
