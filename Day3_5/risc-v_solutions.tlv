@@ -39,7 +39,7 @@
    |cpu
       @0
          $reset = *reset;
-         $pc[31:0] = >>1$reset ? 32'd0 : (>>1$pc + 32'd4);
+         $pc[31:0] = >>1$reset ? 32'd0 : >>1$taken_br ? >>1$br_tgt_pc  : >>1$pc + 32'd4;
       @1
          //`BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
@@ -123,14 +123,16 @@
                      $is_bltu ? $src1_value < $src2_value :
                      $is_bgeu ? $src1_value >= $src2_value :
                      1'b0;
-         
+         //Compute $br_tgt_pc (PC + imm)
+         $br_tgt_pc[31:0] = $pc + $imm ; 
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
       //       other than those specifically expected in the labs. You'll get strange errors for these.
 
    
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = *cyc_cnt > 40;
+   //*passed = *cyc_cnt > 40;
+   *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
    *failed = 1'b0;
    
    // Macro instantiations for:
