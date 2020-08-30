@@ -109,7 +109,8 @@
          $is_and = $dec_bits ==? 11'b0_111_0110011;
          
          $is_load = $opcode ==  7'b0000011;
-         $is_lui = $opcode ==  7'b0010111;
+         $is_lui = $opcode ==  7'b0110111;
+         $is_auipc = $opcode ==  7'b0010111;
          
          $is_jal = $opcode ==  7'b1101111;
          $is_jalr = $dec_bits ==? 11'bx_000_1100111;
@@ -129,7 +130,6 @@
          $is_srli = $dec_bits ==? 11'b0_101_0010011;
          $is_srai = $dec_bits ==? 11'b1_101_0010011;
          
-         
       @2
          //Assigning source register values to Regiter file Read (Rf_rd)
          $rd_valid = $is_i_instr || $is_r_instr || $is_u_instr || $is_j_instr;
@@ -147,8 +147,34 @@
          $src1_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index1) && >>1$rf_wr_en) ? >>1$result : $rf_rd_data1;
          $src2_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index2) && >>1$rf_wr_en) ? >>1$result : $rf_rd_data2;
       @3   
-         //Assign the ALU $result for ADD and ADDI
-         $result[31:0] = $is_addi ? $src1_value + $imm : $is_add ? $src1_value + $src2_value : 32'bx;
+         //Intermediate signals
+         $sltu_result = $src1_value + $src2_value;
+         $sltiu_result = $src1_value < $imm;
+         //Assign the ALU $results
+         $result[31:0] = $is_addi ? $src1_value + $imm :
+                         $is_add ? $src1_value + $src2_value :
+                         $is_andi ? $src1_value && $imm :
+                         $is_ori ? $src1_value || $imm :
+                         $is_xori ? $src1_value ^ $imm :
+                         $is_slli ? $src1_value << $imm[5:0] :
+                         $is_srli ? $src1_value >> $imm[5:0] :
+                         $is_and ? $src1_value && $src2_value :
+                         $is_or ? $src1_value || $src2_value :
+                         $is_xor ? $src1_value ^ $src2_value :
+                         $is_sub ? $src1_value - $src2_value :
+                         $is_sll ? $src1_value << $src2_value[4:0] :
+                         $is_srl ? $src1_value >> $src2_value[4:0] :
+                         $is_sltu ? $src1_value < $src2_value :
+                         $is_sltiu ? $src1_value < $imm :
+                         $is_lui ? { $imm[31:12],12'b0 } :
+                         $is_auipc ? $pc + $imm :
+                         $is_jal ? $pc + $imm :
+                         $is_jalr ? $pc + $imm :
+                         $is_slt ? (($src1_value[31] == $src2_value[31]) ? $sltu_result : { 31'b0 , $src1_value[31] } ) :
+                         $is_slti ? (($src1_value[31] == $imm[31]) ? $sltiu_result : { 31'b0 , $src1_value[31] } ) :
+                         $is_sra ? { {32{$src1_value[31]}}, $src1_value } >> $src2_value[4:0] :
+                         $is_srai ? { {32{$src1_value[31]}}, $src1_value } >> $imm[4:0] :
+                         32'bx;
          
          //Register File Write (Rf_wr)
          ?$valid
