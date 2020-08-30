@@ -40,7 +40,7 @@
       @0
          $reset = *reset;
          //$pc[31:0] = >>1$reset ? 32'd0 : >>1$taken_br ? >>1$br_tgt_pc  : >>1$inc_pc;
-         $pc[31:0] = >>1$reset ? 32'd0 : >>3$valid_taken_br ? >>3$br_tgt_pc  : >>3$inc_pc;
+         $pc[31:0] = >>1$reset ? 32'd0 : >>3$valid_taken_br ? >>3$br_tgt_pc  : >>3$valid_ld ? >>3$inc_pc : >>1$inc_pc;
          //Start and Valid signals
          $start = >>1$reset && !($reset);
          //$valid = $reset ? 0 : ( $start ? 1 : >>3$valid );         
@@ -196,8 +196,8 @@
          $br_tgt_pc[31:0] = $pc + $imm ;
          
          //New valid.
-         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
-         
+         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld);
+         $valid_ld = $valid && $is_load ;
          //Introducing $valid_taken_br
          $valid_taken_br = $valid && $taken_br;
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
@@ -219,7 +219,7 @@
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
