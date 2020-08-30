@@ -180,9 +180,10 @@
          
          //Register File Write (Rf_wr) //Modification wrt load
          ?$valid
-            //$rf_wr_data[31:0] = >>2$valid ? $result : >>2$ld_data;
+            $rf_wr_data[31:0] = !$valid ? >>2$ld_data : $result ;
+            //$rf_wr_data[31:0] = $valid ? $result : >>2$ld_data ;
             //$rf_wr_data[31:0] = $result;
-            $rf_wr_data[31:0] = >>2$valid_ld ? >>2$ld_data : $result;
+            //$rf_wr_data[31:0] = >>2$valid_ld ? >>2$ld_data : $result;
          
          $rf_wr_en = ( ($rd != 5'b0) && $rd_valid && $valid ) || >>2$valid_ld ;
          ?$rf_wr_en
@@ -204,6 +205,12 @@
          $valid_ld = $valid && $is_load ;
          //Introducing $valid_taken_br
          $valid_taken_br = $valid && $taken_br;
+         
+      @4 
+         $dmem_wr_en = $is_s_instr && $valid;
+         $dmem_rd_en = $is_load;
+         $dmem_addr[3:0] = $result [5:2];
+         $dmem_wr_data[31:0] = $src2_value;
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
       //       other than those specifically expected in the labs. You'll get strange errors for these.
@@ -221,7 +228,7 @@
    |cpu
       m4+imem(@1)    // Args: (read stage)
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
-      //m4+dmem(@4)    // Args: (read/write stage)
+      m4+dmem(@4)    // Args: (read/write stage)
    
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
