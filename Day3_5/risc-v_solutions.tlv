@@ -108,9 +108,9 @@
          $rf_rd_en2 = $rs2_valid;
          ?$rf_rd_en2
             $rf_rd_index2[4:0] = $rs2;
-         //Assigning inputs of ALU with Rf_rd Outputs <<Note:rd means read>>
-         $src1_value[31:0] = $rf_rd_data1;
-         $src2_value[31:0] = $rf_rd_data2;
+         //[UPDATE: RF BYPASSED]Assigning inputs of ALU with Rf_rd Outputs <<Note:rd means read>>
+         $src1_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index1) && >>1$rf_wr_en) ? >>1$result : $rf_rd_data1;
+         $src2_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index2) && >>1$rf_wr_en) ? >>1$result : $rf_rd_data2;
       @3   
          //Assign the ALU $result for ADD and ADDI
          $result[31:0] = $is_addi ? $src1_value + $imm : $is_add ? $src1_value + $src2_value : 32'bx;
@@ -158,5 +158,3 @@
                        // @4 would work for all labs
 \SV
    endmodule
-   
-   
