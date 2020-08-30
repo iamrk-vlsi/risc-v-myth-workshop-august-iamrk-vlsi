@@ -40,6 +40,9 @@
       @0
          $reset = *reset;
          $pc[31:0] = >>1$reset ? 32'd0 : >>1$taken_br ? >>1$br_tgt_pc  : >>1$pc + 32'd4;
+         //Start and Valid signals
+         $start = >>1$reset && !($reset);
+         $valid = $reset ? 0 : ( $start ? 1 : >>3$valid );  
       @1
          //`BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
