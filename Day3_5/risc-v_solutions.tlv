@@ -43,8 +43,7 @@
          $pc[31:0] = >>1$reset ? 32'd0 : >>3$valid_taken_br ? >>3$br_tgt_pc  : >>3$inc_pc;
          //Start and Valid signals
          $start = >>1$reset && !($reset);
-         $valid = $reset ? 0 : ( $start ? 1 : >>3$valid );
-         
+         //$valid = $reset ? 0 : ( $start ? 1 : >>3$valid );         
       @1
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
          //`BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
@@ -133,6 +132,10 @@
                      1'b0;
          //Compute $br_tgt_pc (PC + imm)
          $br_tgt_pc[31:0] = $pc + $imm ;
+         
+         //New valid.
+         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br);
+         
          //Introducing $valid_taken_br
          $valid_taken_br = $valid && $taken_br;
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
