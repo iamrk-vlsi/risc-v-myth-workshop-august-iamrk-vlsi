@@ -41,12 +41,12 @@
          $reset = *reset;
          //$pc[31:0] = >>1$reset ? 32'd0 : >>1$taken_br ? >>1$br_tgt_pc  : >>1$inc_pc;
          $pc[31:0] = >>1$reset ? 32'd0 : >>3$valid_taken_br ? >>3$br_tgt_pc  : >>3$inc_pc;
-         $inc_pc[31:0] = $pc[31:0] + 32'd4;
          //Start and Valid signals
          $start = >>1$reset && !($reset);
          $valid = $reset ? 0 : ( $start ? 1 : >>3$valid );
          
       @1
+         $inc_pc[31:0] = $pc[31:0] + 32'd4;
          //`BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
          $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[M4_IMEM_INDEX_CNT+1:2];
          $imem_rd_en = !$reset;
@@ -83,6 +83,7 @@
             $funct7[6:0] = $instr[31:25];
          
          //Instruction Decode
+         $opcode[6:0] = $instr[6:0];
          $dec_bits[10:0] = { $funct7[5] , $funct3 , $opcode };
          $is_beq = $dec_bits ==? 11'bx_000_1100011;
          $is_bne = $dec_bits ==? 11'bx_001_1100011;
@@ -94,13 +95,12 @@
          $is_addi = $dec_bits ==? 11'bx_000_0010011;
          
          $is_add = $dec_bits ==? 11'b0_000_0110011;
-         
+      @2
          //Assigning source register values to Regiter file Read (Rf_rd)
          $rd_valid = $is_i_instr || $is_r_instr || $is_u_instr || $is_j_instr;
          ?$rd_valid
             $rd[4:0] = $instr[11:7];
-         $opcode[6:0] = $instr[6:0];
-         
+            
          $rf_rd_en1 = $rs1_valid;
          ?$rf_rd_en1
             $rf_rd_index1[4:0] = $rs1;
@@ -111,7 +111,7 @@
          //Assigning inputs of ALU with Rf_rd Outputs <<Note:rd means read>>
          $src1_value[31:0] = $rf_rd_data1;
          $src2_value[31:0] = $rf_rd_data2;
-         
+      @3   
          //Assign the ALU $result for ADD and ADDI
          $result[31:0] = $is_addi ? $src1_value + $imm : $is_add ? $src1_value + $src2_value : 32'bx;
          
@@ -151,7 +151,7 @@
    //  o CPU visualization
    |cpu
       m4+imem(@1)    // Args: (read stage)
-      m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
