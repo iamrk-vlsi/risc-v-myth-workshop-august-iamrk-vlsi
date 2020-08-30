@@ -96,7 +96,7 @@
          $is_add = $dec_bits ==? 11'b0_000_0110011;
          
          //Remaining instructions
-         $is_sub = $dec_bits ==? 11'b1_000_0110011;   
+         $is_sub = $dec_bits ==? 11'b1_000_0110011;
          $is_sll = $dec_bits ==? 11'b0_001_0110011;
          $is_slt = $dec_bits ==? 11'b0_010_0110011;
          $is_sltu = $dec_bits ==? 11'b0_011_0110011;
@@ -153,6 +153,8 @@
          //Assign the ALU $results
          $result[31:0] = $is_addi ? $src1_value + $imm :
                          $is_add ? $src1_value + $src2_value :
+                         $is_load ? $src1_value + $imm :
+                         $is_s_instr ? $src1_value + $imm :
                          $is_andi ? $src1_value && $imm :
                          $is_ori ? $src1_value || $imm :
                          $is_xori ? $src1_value ^ $imm :
@@ -173,14 +175,16 @@
                          $is_slt ? (($src1_value[31] == $src2_value[31]) ? $sltu_result : { 31'b0 , $src1_value[31] } ) :
                          $is_slti ? (($src1_value[31] == $imm[31]) ? $sltiu_result : { 31'b0 , $src1_value[31] } ) :
                          $is_sra ? { {32{$src1_value[31]}}, $src1_value } >> $src2_value[4:0] :
-                         $is_srai ? { {32{$src1_value[31]}}, $src1_value } >> $imm[4:0] :
+                         $is_srai ? { {32{$src1_value[31]}}, $src1_value } >> $imm[4:0] : 
                          32'bx;
          
-         //Register File Write (Rf_wr)
+         //Register File Write (Rf_wr) //Modification wrt load
          ?$valid
-            $rf_wr_data[31:0] = $result;
+            //$rf_wr_data[31:0] = >>2$valid ? $result : >>2$ld_data;
+            //$rf_wr_data[31:0] = $result;
+            $rf_wr_data[31:0] = >>2$valid_ld ? >>2$ld_data : $result;
          
-         $rf_wr_en = ($rd == 5'b0) ? 1'b0 : $rd_valid && $valid ;
+         $rf_wr_en = ( ($rd != 5'b0) && $rd_valid && $valid ) || >>2$valid_ld ;
          ?$rf_wr_en
             $rf_wr_index[4:0] = $rd ;
          
@@ -219,7 +223,7 @@
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
