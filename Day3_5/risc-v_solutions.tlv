@@ -48,7 +48,7 @@
                      >>3$valid_jump && >>3$is_jalr ? >>3$jalr_tgt_pc : 
                      >>1$inc_pc;
          //Start and Valid signals
-         $start = >>1$reset && !($reset);
+         //$start = >>1$reset && !($reset);
          //$valid = $reset ? 0 : ( $start ? 1 : >>3$valid );         
       @1
          $inc_pc[31:0] = $pc[31:0] + 32'd4;
@@ -209,7 +209,8 @@
                      $is_bgeu ? $src1_value >= $src2_value :
                      1'b0;         
          //New valid.
-         $valid = $reset ? 0 : ( $start ? 1 : !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld));
+         //$valid = $reset ? 0 : ( $start ? 1 : !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld));
+         $valid = $reset ? 0 : !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld);
          //$valid = !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld);
          $valid_ld = $valid && $is_load ;
          //Introducing $valid_taken_br
