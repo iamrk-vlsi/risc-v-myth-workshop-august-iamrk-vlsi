@@ -41,7 +41,12 @@
       @0
          $reset = *reset;
          //$pc[31:0] = >>1$reset ? 32'd0 : >>1$taken_br ? >>1$br_tgt_pc  : >>1$inc_pc;
-         $pc[31:0] = >>1$reset ? 32'd0 : >>3$valid_taken_br ? >>3$br_tgt_pc  : >>3$valid_ld ? >>3$inc_pc : >>1$inc_pc;
+         $pc[31:0] = >>1$reset ? 32'd0 :
+                     >>3$valid_taken_br ? >>3$br_tgt_pc  :
+                     >>3$valid_ld ? >>3$inc_pc :
+                     >>3$valid_jump && >>3$is_jal ? >>3$br_tgt_pc:
+                     >>3$valid_jump && >>3$is_jalr ? >>3$jalr_tgt_pc : 
+                     >>1$inc_pc;
          //Start and Valid signals
          $start = >>1$reset && !($reset);
          //$valid = $reset ? 0 : ( $start ? 1 : >>3$valid );         
@@ -147,6 +152,11 @@
          //[UPDATE: RF BYPASSED]Assigning inputs of ALU with Rf_rd Outputs <<Note:rd means read>>
          $src1_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index1) && >>1$rf_wr_en) ? >>1$result : $rf_rd_data1;
          $src2_value[31:0] = ((>>1$rf_wr_index == $rf_rd_index2) && >>1$rf_wr_en) ? >>1$result : $rf_rd_data2;
+         
+         //Compute $br_tgt_pc (PC + imm)
+         $br_tgt_pc[31:0] = $pc + $imm ;
+         // added $jalr_target_pc
+         $jalr_tgt_pc [31:0] = $src1_value + $imm;
       @3   
          //Intermediate signals
          $sltu_result = $src1_value + $src2_value;
@@ -181,10 +191,10 @@
          
          //Register File Write (Rf_wr) //Modification wrt load
          ?$valid
-            //$rf_wr_data[31:0] = !$valid ? >>2$ld_data : $result ;
+            $rf_wr_data[31:0] = !$valid ? >>2$ld_data : $result ;
             //$rf_wr_data[31:0] = $valid ? $result : >>2$ld_data ;
             //$rf_wr_data[31:0] = $result;
-         $rf_wr_data[31:0] = >>2$valid_ld ? >>2$ld_data : $result;
+            //$rf_wr_data[31:0] = >>2$valid_ld ? >>2$ld_data : $result;
          
          $rf_wr_en = ( ($rd != 5'b0) && $rd_valid && $valid ) || >>2$valid_ld ;
          ?$rf_wr_en
@@ -197,15 +207,16 @@
                      $is_bge ? ($src1_value >= $src2_value) ^ ($src1_value[31] != $src2_value[31]) :
                      $is_bltu ? $src1_value < $src2_value :
                      $is_bgeu ? $src1_value >= $src2_value :
-                     1'b0;
-         //Compute $br_tgt_pc (PC + imm)
-         $br_tgt_pc[31:0] = $pc + $imm ;
-         
+                     1'b0;         
          //New valid.
          $valid = !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld);
          $valid_ld = $valid && $is_load ;
          //Introducing $valid_taken_br
          $valid_taken_br = $valid && $taken_br;
+         
+         //Adding Jump branching instructions
+         $is_jump = $is_jal || $is_jalr ;
+         $valid_jump = $valid && $is_jump ; 
          
       @4 
          $dmem_wr_en = $is_s_instr && $valid;
