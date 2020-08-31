@@ -156,7 +156,7 @@
          //Compute $br_tgt_pc (PC + imm)
          $br_tgt_pc[31:0] = $pc + $imm ;
          // added $jalr_target_pc
-         $jalr_tgt_pc [31:0] = $src1_value + $imm;
+         $jalr_tgt_pc[31:0] = $src1_value + $imm;
       @3   
          //Intermediate signals
          $sltu_result = $src1_value + $src2_value;
@@ -209,7 +209,8 @@
                      $is_bgeu ? $src1_value >= $src2_value :
                      1'b0;         
          //New valid.
-         $valid = !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld);
+         $valid = $reset ? 0 : ( $start ? 1 : !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld));
+         //$valid = !(>>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_ld || >>2$valid_ld);
          $valid_ld = $valid && $is_load ;
          //Introducing $valid_taken_br
          $valid_taken_br = $valid && $taken_br;
@@ -221,7 +222,7 @@
       @4 
          $dmem_wr_en = $is_s_instr && $valid;
          $dmem_rd_en = $is_load;
-         $dmem_addr[3:0] = $result [5:2];
+         $dmem_addr[3:0] = $result[5:2];
          $dmem_wr_data[31:0] = $src2_value;
       // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
       //       be sure to avoid having unassigned signals (which you might be using for random inputs)
