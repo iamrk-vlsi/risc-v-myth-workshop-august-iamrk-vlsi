@@ -1,7 +1,5 @@
 \m4_TLV_version 1d: tl-x.org
-\SV
-   // This code can be found in: https://github.com/stevehoover/RISC-V_MYTH_Workshop
-   
+\SV 
    m4_include_lib(['https://raw.githubusercontent.com/stevehoover/RISC-V_MYTH_Workshop/bd1f186fde018ff9e3fd80597b7397a1c862cf15/tlv_lib/calculator_shell_lib.tlv'])
 
 \SV
@@ -15,10 +13,10 @@
          $cnt = $reset ? 0 : (>>1$cnt + 1);
          $valid = $cnt;
          $valid_or_reset = $valid || $reset;
-         $val1[31:0] = >>2$out;
-         $val2[31:0] = $rand2[3:0];
       ?$valid_or_reset
          @1
+            $val1[31:0] = >>2$out;       //Modification for memory
+            $val2[31:0] = $rand2[3:0];
             //ADD
             $sum[31:0] = $val1 + $val2;
             //SUB
@@ -29,8 +27,10 @@
             $quot[31:0] = $val1 / $val2;
             //OUT
          @2
-            $mem[31:0] = $reset ? 32'b0 : ($op[2:0] == 3'b101) ? $out : >>2$mem;
-            $out[31:0] =  ($reset || !$valid)  ? 32'b0 : (($op[2:0] == 3'b100) ? >>2$mem : (($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ))));
+            //Free Running Counter
+            $mem_mux[31:0] = $reset ? 32'b0 : ($op[2:0] == 3'b101) ? $out : $mem_mux;
+            $out[31:0] =  ($reset || !$valid)  ? 32'b0 : ($op[2] ? >>2$mem_mux : (($op[1] ? ( $op[0] ? $quot : $prod ) : ( $op[0] ? $diff : $sum ))));
+      
       // Macro instantiations for calculator visualization(disabled by default).
       // Uncomment to enable visualisation, and also,
       // NOTE: If visualization is enabled, $op must be defined to the proper width using the expression below.
